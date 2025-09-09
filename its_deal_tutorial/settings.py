@@ -11,13 +11,17 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+APP_SETTINGS = None
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# Для разработки на localhost нужно это
+os.environ['DJANGO_SETTINGS_MODULE'] = 'its_deal_tutorial.settings'
+os.environ['PYTHONHTTPSVERIFY'] = '0'  # Отключаем проверку SSL для разработки
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-%(%=_i0556@s(60r0mp*wm1n%cxn&@obruiff1#21gsntt6em5'
@@ -37,6 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'integration_utils',
+    'integration_utils.bitrix24',  # сабмодуль
+    'its_deal_tutorial_app',
 ]
 
 MIDDLEWARE = [
@@ -110,13 +117,40 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+from integration_utils.its_utils.mute_logger import MuteLogger
+ilogger = MuteLogger()
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+
+# local settings
+try:
+    from local_settings import *
+except ImportError:
+    from warnings import warn
+
+    warn('create local_settings.py')
+
+if not APP_SETTINGS:
+    from integration_utils.bitrix24.local_settings_class import LocalSettingsClass
+    APP_SETTINGS = LocalSettingsClass(
+        # portal_domain='b24-p202z0.bitrix24.ru',
+        app_domain='is_demo.it-solution.ru',
+        app_name='deal_app',
+        salt='df897hynj4b34u804b5n45bkl4b',
+        secret_key='sfjbh40989034nk4j4389tfj',
+        # application_bitrix_client_id='local.68bff495d51f94.96236588',
+        # application_bitrix_client_secret='Txv5IewGJbOkIv7ECKtQ5TPs3DDo2pLVhpzmjA9C71CtQqIdJu',
+        application_index_path='/',
+    )
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
+# Для статических файлов (если будут проблемы)
+
