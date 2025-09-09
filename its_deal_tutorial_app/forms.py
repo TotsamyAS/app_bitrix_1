@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator
 from datetime import date
 
 class DealForm(forms.Form):
+    auth_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    refresh_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    domain = forms.CharField(widget=forms.HiddenInput(), required=False)
     title = forms.CharField(
         label='Название сделки',
         max_length=100,

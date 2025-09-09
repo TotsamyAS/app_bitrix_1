@@ -19,7 +19,7 @@
                         <strong>{{ deal.TITLE }}</strong>
                         <div>
                             <div> Бюджет: {{deal.OPPORTUNITY|default:"0" }} руб.</div>
-                            <div>🏷Стадия: {{deal.STAGE_ID }}</div>
+                            <div> Стадия: {{deal.STAGE_ID }}</div>
                             {% if deal.BEGINDATE_FORMATTED %}
                             <div> Начало: {{deal.BEGINDATE_FORMATTED }}</div>
                             {% endif %}
@@ -38,10 +38,13 @@
             {% endif %}
         </div>
 
-    <div class="section">
-            <h2>➕ Создать новую сделку:</h2>
+    <div>
+            <h2>+ Создать новую сделку:</h2>
             <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="AUTH_ID" value="{{ request.POST.AUTH_ID|default:'' }}">
+                <input type="hidden" name="REFRESH_ID" value="{{ request.POST.REFRESH_ID|default:'' }}">
+                <input type="hidden" name="DOMAIN" value="{{ request.GET.DOMAIN|default:'' }}">
 
                 <div>
                     <div>
@@ -75,14 +78,9 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="id_my_custom_field">Особые пожелания:</label>
-                    {{ form.my_custom_field }}
-                    {{ form.my_custom_field.errors }}
-                </div>
+
 
                 {{ form.non_field_errors }}
-
                 <button type="submit">Создать сделку</button>
             </form>
         </div>

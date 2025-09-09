@@ -147,10 +147,6 @@ if not APP_SETTINGS:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
 
-# Для статических файлов (если будут проблемы)
+X_FRAME_OPTIONS = 'ALLOW-FROM https://b24-p202z0.bitrix24.ru'
 
