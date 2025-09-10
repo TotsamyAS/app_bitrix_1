@@ -59,10 +59,25 @@ def index(request):
     """
 
     try:
-        if request.method == 'GET' and 'AUTH_ID' in request.POST:
-            save_auth_params(request)
+
         bitrix_user = request.bitrix_user
         bitrix_user_token = request.bitrix_user_token
+        if not 'UF_CRM_DELIVERY_ADDRESS' in bitrix_user_token.call_api_method('crm.deal.fields', {}).get('result',[]):
+            api_response = bitrix_user_token.call_api_method('crm.deal.userfield.add', {
+                'fields': {
+                    'LABEL': "UF_CRM_DELIVERY_ADDRESS",
+                    'USER_TYPE_ID': "string",
+                    'FIELD_NAME': "UF_CRM_DELIVERY_ADDRESS",
+                    'MULTIPLE': "N",
+                    'MANDATORY': "N",
+                    'SHOW_FILTER': "Y",
+                    'SETTINGS': {
+                        'DEFAULT_VALUE': "UNKNOWN",
+                    }
+                }
+            })
+            logger.info(f'Поле UF_CRM_DELIVERY_ADDRESS создано: {api_response}',)
+
 
         print("=== AUTH SUCCESS ===")
         print("bitrix_user:", bitrix_user)
@@ -88,7 +103,7 @@ def index(request):
                     'OPPORTUNITY',
                     'STAGE_ID',
                     'BEGINDATE',
-                    'CLOSEDATE'
+                    'CLOSEDATE',
                     'UF_CRM_DELIVERY_ADDRESS',
                 ],
                 'order': {'DATE_CREATE': 'DESC'},
@@ -111,9 +126,9 @@ def index(request):
 
 
         if request.method == 'POST':
-            if 'AUTH_ID' not in request.POST:
-                restore_auth_params(request)
-                logger.info('перенастройка параметров авторизации во время POST...')
+            # if 'AUTH_ID' not in request.POST:
+                # restore_auth_params(request)
+                # logger.info('перенастройка параметров авторизации во время POST...')
             form = DealForm(request.POST)
             if form.is_valid():
                 # подготтовка данных для создания сделки
@@ -125,7 +140,7 @@ def index(request):
                     'STAGE_ID': 'NEW',
                     'BEGINDATE': form.cleaned_data['start_date'].strftime('%Y-%m-%d'),
                     'CLOSEDATE': form.cleaned_data['end_date'].strftime('%Y-%m-%d'),
-                    'UF_CRM_DELIVERY_ADDRESS': form.cleaned_data['UF_CRM_DELIVERY_ADDRESS'],
+                    'UF_CRM_DELIVERY_ADDRESS': form.cleaned_data['delivery_address'],
 
                 }
                 params = {'fields': fields}
@@ -165,10 +180,8 @@ def index(request):
                                 if deal.get('CLOSEDATE'):
                                     deal['CLOSEDATE_FORMATTED'] = format_date(deal['CLOSEDATE'])
 
-                            success_message = 'Сделка успешно создана!'
                         except Exception as e:
                             logger.error(f'Ошибка при обновлении списка сделок: {e}')
-                            success_message = 'Сделка создана, но не удалось обновить список'
                 except Exception as e:
                     form.add_error(None, f'Ошибка при создании сделки: {str(e)}')
                     deals = []
@@ -185,9 +198,7 @@ def index(request):
         response = render(request, 'index.html', context)
         return response
     except Exception as e:
-        return render(request, 'error.html', {
-            'error': f'Ошибка в основном обработчике: {str(e)}'
-        })
+        return HttpResponse( f'Ошибка в основном обработчике: {str(e)}')
 
 # Простая функция для проверки, что сервер работает
 def health_check(request):

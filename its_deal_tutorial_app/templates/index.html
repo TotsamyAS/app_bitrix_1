@@ -4,85 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Приложение 1 - сделки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        form {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 20px;
+            max-width: 500px;
+        }
+        form div {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #27ae60;
+        }
+        .required {
+            color: red;
+            margin-left: 3px;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1> Добро пожаловать, {{ user_name }}!</h1>
+    <div>
+        <h1>Добро пожаловать, {{ user_name }}!</h1>
     </div>
 
-            <div class="section">
-            <h2>Ваши последние 10 активных сделок:</h2>
-            {% if deals %}
-                <ul>
-                    {% for deal in deals %}
-                    <li>
-                        <strong>{{ deal.TITLE }}</strong>
-                        <div>
-                            <div> Бюджет: {{deal.OPPORTUNITY|default:"0" }} руб.</div>
-                            <div> Стадия: {{deal.STAGE_ID }}</div>
-                            {% if deal.BEGINDATE_FORMATTED %}
-                            <div> Начало: {{deal.BEGINDATE_FORMATTED }}</div>
-                            {% endif %}
-                            {% if deal.CLOSEDATE_FORMATTED %}
-                            <div>Завершение: {{deal.CLOSEDATE_FORMATTED }}</div>
-                            {% endif %}
-                            {% if deal.DELIVERY_ADDRESS %}
-                            <div>Адрес: {{deal.DELIVERY_ADDRESS }}</div>
-                            {% endif %}
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>У вас нет активных сделок.</p>
-            {% endif %}
-        </div>
+    <h2>Ваши последние 10 активных сделок:</h2>
+    {% if deals %}
+        <table>
+            <tr>
+                <th>Название</th>
+                <th>Бюджет</th>
+                <th>Стадия</th>
+                <th>Начало</th>
+                <th>Конец</th>
+                <th>Адрес доставки</th>
+            </tr>
+            {% for deal in deals %}
+            <tr>
+                <td>{{ deal.TITLE }}</td>
+                <td>{{ deal.OPPORTUNITY |default:"0" }} руб.</td>
+                <td>{{ deal.STAGE_ID|default:"NEW" }}</td>
+                <td>{{ deal.BEGINDATE_FORMATTED }}</td>
+                <td>{{ deal.CLOSEDATE_FORMATTED|default:"Unknown" }}</td>
+                <td>{{ deal.UF_CRM_DELIVERY_ADDRESS|default:"Unknown" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>У вас нет активных сделок.</p>
+    {% endif %}
 
     <div>
-            <h2>+ Создать новую сделку:</h2>
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="AUTH_ID" value="{{ request.POST.AUTH_ID|default:'' }}">
-                <input type="hidden" name="REFRESH_ID" value="{{ request.POST.REFRESH_ID|default:'' }}">
-                <input type="hidden" name="DOMAIN" value="{{ request.GET.DOMAIN|default:'' }}">
+        <h2>+ Создать новую сделку:</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="AUTH_ID" value="{{ request.POST.AUTH_ID|default:'' }}">
+            <input type="hidden" name="REFRESH_ID" value="{{ request.POST.REFRESH_ID|default:'' }}">
+            <input type="hidden" name="DOMAIN" value="{{ request.GET.DOMAIN|default:'' }}">
 
-                <div>
-                    <div>
-                        <label for="id_title">Название сделки:</label>
-                        {{ form.title }}
-                        {{ form.title.errors }}
-                    </div>
+            <div>
+                <label for="id_title">
+                    Название сделки{% if form.title.field.required %}<span class="required">*</span>{% endif %}:
+                </label>
+                {{ form.title }}
+            </div>
 
-                    <div>
-                        <label for="id_opportunity">Бюджет (руб.):</label>
-                        {{ form.opportunity }}
-                        {{ form.opportunity.errors }}
-                    </div>
+            <div>
+                <label for="id_opportunity">
+                    Бюджет (руб.){% if form.opportunity.field.required %}<span class="required">*</span>{% endif %}:
+                </label>
+                {{ form.opportunity }}
+            </div>
 
-                    <div>
-                        <label for="id_start_date">Дата начала:</label>
-                        {{ form.start_date }}
-                        {{ form.start_date.errors }}
-                    </div>
+            <div>
+                <label for="id_start_date">
+                    Дата начала{% if form.start_date.field.required %}<span class="required">*</span>{% endif %}:
+                </label>
+                {{ form.start_date }}
+            </div>
 
-                    <div>
-                        <label for="id_end_date">Дата завершения:</label>
-                        {{ form.end_date }}
-                        {{ form.end_date.errors }}
-                    </div>
+            <div>
+                <label for="id_end_date">
+                    Дата завершения{% if form.end_date.field.required %}<span class="required">*</span>{% endif %}:
+                </label>
+                {{ form.end_date }}
+            </div>
 
-                    <div>
-                        <label for="id_delivery_address">Адрес доставки:</label>
-                        {{ form.delivery_address }}
-                        {{ form.delivery_address.errors }}
-                    </div>
-                </div>
+            <div>
+                <label for="id_delivery_address">
+                    Адрес доставки{% if form.delivery_address.field.required %}<span class="required">*</span>{% endif %}:
+                </label>
+                {{ form.delivery_address }}
+            </div>
 
-
-
-                {{ form.non_field_errors }}
-                <button type="submit">Создать сделку</button>
-            </form>
-        </div>
+            {{ form.non_field_errors }}
+            <button type="submit">Создать сделку</button>
+        </form>
+    </div>
 </body>
 </html>

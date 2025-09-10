@@ -33,8 +33,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'foodgram',
-        'USER': 'postgresql',
-        'PASSWORD': '123456',
+        'USER': 'postgres',
+        'PASSWORD': 'wa3499',
         'HOST': 'localhost',
         'PORT': '5432',
     },
