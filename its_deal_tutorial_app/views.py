@@ -3,8 +3,6 @@ from django.shortcuts import render, redirect
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
 from .forms import DealForm
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from integration_utils.bitrix24.bitrix_user_auth.authenticate_on_start_application import authenticate_on_start_application
 import datetime
 import logging
 
@@ -63,8 +61,6 @@ def index(request):
     try:
         if request.method == 'GET' and 'AUTH_ID' in request.POST:
             save_auth_params(request)
-
-        # Теперь атрибуты должны быть доступны
         bitrix_user = request.bitrix_user
         bitrix_user_token = request.bitrix_user_token
 
@@ -73,7 +69,7 @@ def index(request):
         print("bitrix_user_token:", bitrix_user_token)
         print("====================")
 
-        # 1. Получаем имя пользователя
+        # 1. получаем имя пользователя
         user_name = f"{bitrix_user.first_name} {bitrix_user.last_name}"
 
 
@@ -84,7 +80,7 @@ def index(request):
             params = {
                 'filter': {
                     'ASSIGNED_BY_ID': bitrix_user.bitrix_id,
-                    'STAGE_ID': 'NEW'  # Только активные сделки
+                    'STAGE_ID': 'NEW'  # только активные сделки
                 },
                 'select': [
                     'ID',
@@ -93,14 +89,16 @@ def index(request):
                     'STAGE_ID',
                     'BEGINDATE',
                     'CLOSEDATE'
-                    'DELIVERY_ADDRESS',
+                    'UF_CRM_DELIVERY_ADDRESS',
                 ],
                 'order': {'DATE_CREATE': 'DESC'},
                 'start': 0
             }
             api_response = bitrix_user_token.call_api_method(method, params)
             deals = api_response.get('result', [])[:10]
-            # Форматируем даты для отображения
+
+            print("Поля 10-й сделки:", deals[9].keys() if deals else "Нет сделок")
+            # форматирование даты для отображения
             for deal in deals:
                 if deal.get('BEGINDATE'):
                     deal['BEGINDATE_FORMATTED'] = format_date(deal['BEGINDATE'])
@@ -127,7 +125,7 @@ def index(request):
                     'STAGE_ID': 'NEW',
                     'BEGINDATE': form.cleaned_data['start_date'].strftime('%Y-%m-%d'),
                     'CLOSEDATE': form.cleaned_data['end_date'].strftime('%Y-%m-%d'),
-                    'DELIVERY_ADDRESS': form.cleaned_data['delivery_address'],
+                    'UF_CRM_DELIVERY_ADDRESS': form.cleaned_data['UF_CRM_DELIVERY_ADDRESS'],
 
                 }
                 params = {'fields': fields}
@@ -138,7 +136,7 @@ def index(request):
                     new_deal_id = api_response.get('result')
 
                     if new_deal_id:
-                        # УСПЕХ: Обновляем список сделок после успешного создания
+                        # УСПЕХ: обновить список сделок после успешного создания
                         try:
                             method = 'crm.deal.list'
                             params = {
@@ -153,13 +151,13 @@ def index(request):
                                     'STAGE_ID',
                                     'BEGINDATE',
                                     'CLOSEDATE',
-                                    'DELIVERY_ADDRESS',
+                                    'UF_CRM_DELIVERY_ADDRESS',
                                 ],
                                 'order': {'DATE_CREATE': 'DESC'},
                                 'start': 0
                             }
                             api_response = bitrix_user_token.call_api_method(method, params)
-                            deals = api_response.get('result', [])[:10]  # ← Теперь это правильный список
+                            deals = api_response.get('result', [])[:10]
 
                             for deal in deals:
                                 if deal.get('BEGINDATE'):
